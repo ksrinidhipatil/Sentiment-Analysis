@@ -16,6 +16,7 @@ x.txt = lapply(x,function(t)t$getText())
 pos = scan('positive-words.txt', what='character', comment.char=';') 
 neg = scan('negative-words.txt', what='character', comment.char=';')
 score.sentiment = function(sentences, pos.words, neg.words, .progress='none')
+#Thsi code is foor the sentiment package which is not in crana
 {
   require(plyr)
   require(stringr)
