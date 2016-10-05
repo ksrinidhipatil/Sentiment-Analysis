@@ -1,0 +1,88 @@
+library(twitteR)
+library(wordcloud)
+library(RColorBrewer)
+library(plyr)
+library(ggplot2)
+library(sentiment)
+ckey <- 'lLPMjTWHdRpt84Yy5RMVMCUoC'
+cskey <-'tnXtZjH6X1E3mmKrNMC44iKkhnoyyZTLfMGAnd6EBQ2ess77Xb'
+atoken <- '593545762-QNdLFeA7BfuUyg3RcTkSmBRE60gzIzFVZVD00HRC'
+atokensec <- 'zHkK28QF2m0romj6wmyN9Vfumakg5Xh2b2D6FbwrjlMa8'
+setup_twitter_oauth(ckey, cskey, atoken, atokensec)
+x <- searchTwitter('Bernie', n=3000, lan = "en", since = '2016-01-01', until = '2016-04-05', locale = NULL, geocode = '42.331427,-83.0457538,300mi')
+lebgth(x)
+x.txt = lapply(x,function(t)t$getText())
+x.txt = lapply(x,function(t)t$getText())
+pos = scan('positive-words.txt', what='character', comment.char=';') 
+neg = scan('negative-words.txt', what='character', comment.char=';')
+score.sentiment = function(sentences, pos.words, neg.words, .progress='none')
+{
+  require(plyr)
+  require(stringr)
+  
+  # we got a vector of sentences. plyr will handle a list or a vector as an "l" for us
+  # we want a simple array of scores back, so we use "l" + "a" + "ply" = laply:
+  scores = laply(sentences, function(sentence, pos.words, neg.words) {
+    
+    # clean up sentences with R's regex-driven global substitute, gsub():
+    sentence = gsub('[[:punct:]]', '', sentence)
+    sentence = gsub('[[:cntrl:]]', '', sentence)
+    sentence = gsub('\\d+', '', sentence)
+    # and convert to lower case:
+    sentence = tolower(sentence)
+    
+    # split into words. str_split is in the stringr package
+    word.list = str_split(sentence, '\\s+')
+    # sometimes a list() is one level of hierarchy too much
+    words = unlist(word.list)
+    
+    # compare our words to the dictionaries of positive & negative terms
+    pos.matches = match(words, pos.words)
+    neg.matches = match(words, neg.words)
+    
+    # match() returns the position of the matched term or NA
+    # we just want a TRUE/FALSE:
+    pos.matches = !is.na(pos.matches)
+    neg.matches = !is.na(neg.matches)
+    
+    # and conveniently enough, TRUE/FALSE will be treated as 1/0 by sum():
+    score = sum(pos.matches) - sum(neg.matches)
+    
+    return(score)
+  }, pos.words, neg.words, .progress=.progress )
+  
+  scores.df = data.frame(score=scores, text=sentences)
+  return(scores.df)
+}
+x.txt = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "",x.txt)
+x.txt = gsub("@\\w+", "", x.txt)
+x.txt = gsub("[[:punct:]]", "", x.txt)
+x.txt = gsub("[[:digit:]]", "", x.txt)
+x.txt = gsub("http\\w+", "", x.txt)
+x.txt = gsub("[ \t]{2,}", "", x.txt)
+x.txt = gsub("^\\s+|\\s+$", "", x.txt)
+try.error = function(x)
+{
+  # create missing value
+  y = NA
+  # tryCatch error
+  try_error = tryCatch(tolower(x), error=function(e) e)
+  # if not an error
+  if (!inherits(try_error, "error"))
+    y = tolower(x)
+  # result
+  return(y)
+}
+x.txt = sapply(x.txt, try.error)
+x.txt = x.txt[!is.na(x.txt)]
+names(x.txt) = NULL
+
+x = score.sentiment(x.txt, pos, neg)
+ 
+hist(x$score, right = FALSE, col=colors, main="Texas", xlab="Scale")
+
+m = as.matrix(tdm)
+word_freqs = sort(rowSums(m), decreasing=TRUE)
+dm = data.frame(word=names(word_freqs), freq=word_freqs)
+wordcloud(dm$word, dm$freq, random.order=FALSE, colors=brewer.pal(8, "Dark2"))
+
