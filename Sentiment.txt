@@ -4,10 +4,10 @@ library(RColorBrewer)
 library(plyr)
 library(ggplot2)
 library(sentiment)
-ckey <- 'lLPMjTWHdRpt84Yy5RMVMCUoC'
-cskey <-'tnXtZjH6X1E3mmKrNMC44iKkhnoyyZTLfMGAnd6EBQ2ess77Xb'
-atoken <- '593545762-QNdLFeA7BfuUyg3RcTkSmBRE60gzIzFVZVD00HRC'
-atokensec <- 'zHkK28QF2m0romj6wmyN9Vfumakg5Xh2b2D6FbwrjlMa8'
+ckey <- '##########'
+cskey <-'#############'
+atoken <- '################################'
+atokensec <- '####################################'
 setup_twitter_oauth(ckey, cskey, atoken, atokensec)
 x <- searchTwitter('Bernie', n=3000, lan = "en", since = '2016-01-01', until = '2016-04-05', locale = NULL, geocode = '42.331427,-83.0457538,300mi')
 lebgth(x)
